@@ -202,37 +202,22 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+  // Constrain commanded vertical velocityto be within physical limits
   velZCmd = CONSTRAIN(velZCmd, -maxAscentRate, maxDescentRate);
 
-  const float bz = R(2, 2);
-  const float errorPos = posZCmd - posZ;
-  const float errorVel = velZCmd - velZ;
-  integratedAltitudeError += errorPos * dt;
+  // Vertical position and velocity errors
+  float posZError = posZCmd - posZ;
+  float velZError = velZCmd - velZ;
+  
+  // Keep track of running integrated vertical position error
+  integratedAltitudeError += posZError * dt;
 
-  const float u1Bar = kpPosZ * errorPos
-      + kpVelZ * errorVel
-      + KiPosZ * integratedAltitudeError
-      + accelZCmd;
-  const float c = (u1Bar - CONST_GRAVITY) / bz;
+  // Vertical acceleration
+  float u1Bar = kpPosZ * posZError + kpVelZ * velZError + KiPosZ * integratedAltitudeError + accelZCmd;
+  float accelZ = (CONST_GRAVITY - u1Bar) / R(2, 2);
 
-  thrust = mass * -c;
-
-  //// Constrain commanded vertical velocityto be within physical limits
-  //velZCmd = CONSTRAIN(velZCmd, -maxDescentRate, maxAscentRate);
-
-  //// Vertical position and velocity errors
-  //float posZError = posZCmd - posZ;
-  //float velZError = velZCmd - velZ;
-
-  //// Keep track of running integrated vertical position error
-  //integratedAltitudeError += posZError * dt;
-
-  //// Vertical acceleration
-  //float u1 = accelZCmd + (kpPosZ * posZError) + (kpVelZ * velZError) + (integratedAltitudeError * KiPosZ);
-  //float accelZ = (CONST_GRAVITY -u1) / float(R(2, 2));
-
-  //// Convert acceleration to thrust
-  //thrust = accelZ * mass;
+  // Convert acceleration to thrust
+  thrust = mass * accelZ;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
@@ -305,6 +290,12 @@ float QuadControl::YawControl(float yawCmd, float yaw)
   float yawRateCmd=0;
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+  // Yaw error
+  float yawError = yawCmd - yaw;
+  // Constrain yaw error to be in the range [0, 2*pi]
+  yawError = fmodf(yawError, 2 * F_PI);
+  // Commanded yaw rate
+  yawRateCmd = kpYaw * yawError;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
