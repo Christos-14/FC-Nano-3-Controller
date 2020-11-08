@@ -160,6 +160,15 @@ V3F QuadControl::RollPitchControl(V3F accelCmd, Quaternion<float> attitude, floa
   float bxCmd = accelCmd.x / collAccelCmd;
   float byCmd = accelCmd.y / collAccelCmd;
 
+  // Constrain bx and by commanded to be within physical limits
+  bxCmd = CONSTRAIN(bxCmd, -maxTiltAngle, maxTiltAngle);
+  byCmd = CONSTRAIN(byCmd, -maxTiltAngle, maxTiltAngle);
+  if (collThrustCmd < 0)
+  {
+      bxCmd = 0;
+      byCmd = 0;
+  }
+
   // bx and by error
   float bxError = bxCmd - bx;
   float byError = byCmd - by;
