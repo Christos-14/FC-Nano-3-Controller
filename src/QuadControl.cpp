@@ -202,7 +202,37 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+  velZCmd = CONSTRAIN(velZCmd, -maxAscentRate, maxDescentRate);
 
+  const float bz = R(2, 2);
+  const float errorPos = posZCmd - posZ;
+  const float errorVel = velZCmd - velZ;
+  integratedAltitudeError += errorPos * dt;
+
+  const float u1Bar = kpPosZ * errorPos
+      + kpVelZ * errorVel
+      + KiPosZ * integratedAltitudeError
+      + accelZCmd;
+  const float c = (u1Bar - CONST_GRAVITY) / bz;
+
+  thrust = mass * -c;
+
+  //// Constrain commanded vertical velocityto be within physical limits
+  //velZCmd = CONSTRAIN(velZCmd, -maxDescentRate, maxAscentRate);
+
+  //// Vertical position and velocity errors
+  //float posZError = posZCmd - posZ;
+  //float velZError = velZCmd - velZ;
+
+  //// Keep track of running integrated vertical position error
+  //integratedAltitudeError += posZError * dt;
+
+  //// Vertical acceleration
+  //float u1 = accelZCmd + (kpPosZ * posZError) + (kpVelZ * velZError) + (integratedAltitudeError * KiPosZ);
+  //float accelZ = (CONST_GRAVITY -u1) / float(R(2, 2));
+
+  //// Convert acceleration to thrust
+  //thrust = accelZ * mass;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
@@ -240,7 +270,19 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
-  
+  // Constrain lateral velocities to be within physical limits
+  velCmd.x = CONSTRAIN(velCmd.x, -maxSpeedXY, maxSpeedXY);
+  velCmd.y = CONSTRAIN(velCmd.y, -maxSpeedXY, maxSpeedXY);
+
+  // Lateral position and velocity errors
+  V3F posError = posCmd - pos;
+  V3F velError = velCmd - vel;
+
+  accelCmd += kpPosXY * posError + kpVelXY * velError;
+
+  // Constrain lateral accelerations to be within physical limits
+  accelCmd.x = CONSTRAIN(accelCmd.x, -maxAccelXY, maxAccelXY);
+  accelCmd.y = CONSTRAIN(accelCmd.y, -maxAccelXY, maxAccelXY);
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
